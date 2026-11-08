@@ -1,0 +1,28 @@
+services:
+
+# Postgresql database image
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: homefix
+      POSTGRES_PASSWORD: homefix
+      POSTGRES_DB: homefix
+    ports:
+      - "5435:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./sql/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+
+
+# Rabbitmq image
+  rabbitmq:
+    image: rabbitmq:4-management
+    environment:
+      RABBITMQ_DEFAULT_USER: homefix
+      RABBITMQ_DEFAULT_PASS: homefix
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+volumes:
+  postgres_data:

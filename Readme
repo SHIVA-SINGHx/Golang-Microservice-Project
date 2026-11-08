@@ -1,0 +1,2 @@
+1. Install go fiber = go get -u github.com/gofiber/fiber/v3
+2. Install pgx do driver for db = go get github.com/jackc/pgx/v5

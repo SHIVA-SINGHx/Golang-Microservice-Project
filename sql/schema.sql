@@ -1,0 +1,12 @@
+CREATE TABLE IF NOT EXISTS services(
+    id BIGSERIAL PRIMARY KEY,
+    name TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS bookings(
+    id BIGSERIAL PRIMARY KEY,
+    service_id BIGINT NOT NULL,
+    customer_name TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'pending',
+    created_at TIMESTAMPZ NOT NULL DEFAULT NOW()
+);
