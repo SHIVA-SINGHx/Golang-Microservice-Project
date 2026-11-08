@@ -1,2 +1,8 @@
 1. Install go fiber = go get -u github.com/gofiber/fiber/v3
 2. Install pgx do driver for db = go get github.com/jackc/pgx/v5
+3. Install grpc by running these command
+
+ - go get google.golang.org/grpc   ---> grpc installation
+ - go get google.golang.org/protobuf --> protobuf installation 
+ - go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+ - go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest

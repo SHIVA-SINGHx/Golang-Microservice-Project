@@ -88,6 +88,7 @@ func main() {
 		return c.Status(fiber.StatusCreated).JSON(s)
 	})
 
+	// start out http server on port 3002 
 		log.Fatal(app.Listen(":3002"))
 
 
