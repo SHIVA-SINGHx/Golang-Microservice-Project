@@ -87,5 +87,9 @@ func main() {
 
 		return c.Status(fiber.StatusCreated).JSON(s)
 	})
-}
 
+		log.Fatal(app.Listen(":3002"))
+
+
+
+}
