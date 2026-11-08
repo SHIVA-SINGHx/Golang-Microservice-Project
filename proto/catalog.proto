@@ -1,0 +1,20 @@
+syntax = "proto2";
+
+package catalog;
+
+option go_package = "example.com/golang-microservice/proto;catalogpb";
+
+
+
+service CatalogService {
+  rpc CheckServiceExists (CheckServiceRequest) returns (CheckServiceResponse);
+}
+
+message CheckServiceRequest {
+  int64 service_id = 1;
+
+}
+
+message CheckServiceResponse {
+  bool exists = 1;
+}
