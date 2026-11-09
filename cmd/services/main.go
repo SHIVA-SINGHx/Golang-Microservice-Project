@@ -116,7 +116,7 @@ func main() {
 		// grpc call : booking -> catalog
 		// unary rpc
 
-		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		ctx, cancel := context.  WithTimeout(context.Background(), 2*time.Second)
 		defer cancel()
 
 		resp, err := catalog.CheckServiceExists(ctx, &catalogpb.CheckServiceRequest{ServiceId: body.ServiceID})
