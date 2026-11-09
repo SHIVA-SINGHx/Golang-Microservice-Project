@@ -8,5 +8,5 @@ CREATE TABLE IF NOT EXISTS bookings(
     service_id BIGINT NOT NULL,
     customer_name TEXT NOT NULL,
     status TEXT NOT NULL DEFAULT 'pending',
-    created_at TIMESTAMPZ NOT NULL DEFAULT NOW()
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
