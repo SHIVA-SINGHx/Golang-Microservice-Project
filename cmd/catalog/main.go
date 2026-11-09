@@ -6,8 +6,37 @@ import (
 	"strings"
 
 	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/internal/nilerror"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"google.golang.org/grpc"
+
+	catalogpb "example.com/golang-microservice/proto"
 )
+
+type catalogServer struct {
+	catalogpb.UnimplementedCatalogServiceServer
+
+	pool *pgxpool.Pool
+}
+
+
+func (s *catalogServer) CheckServiceExists(ctx context.Context, req *catalogpb.CheckServiceRequest) (catalogpb.CheckServiceResponse, error)
+{
+	var exists bool
+
+	err:= s.pool.QueryRow(ctx,
+	"SELECT EXISTS (SELECT 1 FROM services WHERE id = $1)",
+	req.GetServiceId(),
+	).Scan(&exists)
+
+	if err != nil{
+		return nil, err
+	}
+
+	return &catalogpb.CheckServiceResponse(Exists: exists), nil
+}
+
+
 
 type service struct {
 	ID   int64  `json:"id"`
@@ -90,7 +119,6 @@ func main() {
 
 	// start out http server on port 3002 
 		log.Fatal(app.Listen(":3002"))
-
 
 
 }

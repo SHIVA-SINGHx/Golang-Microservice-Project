@@ -5,7 +5,6 @@ package catalog;
 option go_package = "example.com/golang-microservice/proto;catalogpb";
 
 
-
 service CatalogService {
   rpc CheckServiceExists (CheckServiceRequest) returns (CheckServiceResponse);
 }
