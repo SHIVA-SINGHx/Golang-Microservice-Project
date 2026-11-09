@@ -117,8 +117,23 @@ func main() {
 		return c.Status(fiber.StatusCreated).JSON(s)
 	})
 
+
+	// open a TCP listener on a diff port - 50051
+	lis, err := net.Listen("tcp", ":50051")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	grpcServer := grpc.NewServer()
+	catalogpb.RegisterCatalogServiceServer(grpcServer, &catalogServer{pool: pool})
+
+	go func() {
+		log.Fatal(grpcServer.Serve(lis))
+	}()
+
 	// start out http server on port 3002 
 		log.Fatal(app.Listen(":3002"))
+
 
 
 }
