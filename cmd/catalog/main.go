@@ -3,10 +3,10 @@ package main
 import (
 	"context"
 	"log"
+	"net"
 	"strings"
 
 	"github.com/gofiber/fiber/v3"
-	"github.com/gofiber/fiber/v3/internal/nilerror"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"google.golang.org/grpc"
 
@@ -15,28 +15,23 @@ import (
 
 type catalogServer struct {
 	catalogpb.UnimplementedCatalogServiceServer
-
 	pool *pgxpool.Pool
 }
 
-
-func (s *catalogServer) CheckServiceExists(ctx context.Context, req *catalogpb.CheckServiceRequest) (catalogpb.CheckServiceResponse, error)
-{
+func (s *catalogServer) CheckServiceExists(ctx context.Context, req *catalogpb.CheckServiceRequest) (*catalogpb.CheckServiceResponse, error) {
 	var exists bool
 
-	err:= s.pool.QueryRow(ctx,
-	"SELECT EXISTS (SELECT 1 FROM services WHERE id = $1)",
-	req.GetServiceId(),
+	err := s.pool.QueryRow(ctx,
+		"SELECT EXISTS (SELECT 1 FROM services WHERE id = $1)",
+		req.GetServiceId(),
 	).Scan(&exists)
 
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 
-	return &catalogpb.CheckServiceResponse(Exists: exists), nil
+	return &catalogpb.CheckServiceResponse{Exists: exists}, nil
 }
-
-
 
 type service struct {
 	ID   int64  `json:"id"`
@@ -48,12 +43,11 @@ type serviceRequest struct {
 }
 
 func main() {
-	//create your postgresql connection pool
+	// create your postgresql connection pool
 	pool, err := pgxpool.New(context.Background(), "postgres://homefix:homefix@localhost:5435/homefix?sslmode=disable")
-	if err != nil{
+	if err != nil {
 		log.Fatal(err)
 	}
-
 	defer pool.Close()
 
 	// CHECK IF POSTGRES IS REACHABLE
@@ -61,15 +55,14 @@ func main() {
 		log.Fatal(err)
 	}
 
-	app:= fiber.New()
+	app := fiber.New()
 
 	app.Get("/services", func(c fiber.Ctx) error {
 		rows, err := pool.Query(context.Background(), "SELECT id, name FROM services ORDER BY id")
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "database error"})
 		}
-
-		defer rows.Close() // release query resources when its finished
+		defer rows.Close()
 
 		list := []service{}
 
@@ -83,21 +76,17 @@ func main() {
 			list = append(list, s)
 		}
 
-		// check if any error is there while u read the rows
-
 		if err := rows.Err(); err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "database error"})
 		}
 
 		return c.JSON(list)
-
 	})
-
 
 	app.Post("/services", func(c fiber.Ctx) error {
 		var body serviceRequest
 
-		if err := c.Bind().Body(&body); err != nil || strings	.TrimSpace(body.Name) == "" {
+		if err := c.Bind().Body(&body); err != nil || strings.TrimSpace(body.Name) == "" {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "name is required"})
 		}
 
@@ -117,7 +106,6 @@ func main() {
 		return c.Status(fiber.StatusCreated).JSON(s)
 	})
 
-
 	// open a TCP listener on a diff port - 50051
 	lis, err := net.Listen("tcp", ":50051")
 	if err != nil {
@@ -128,12 +116,13 @@ func main() {
 	catalogpb.RegisterCatalogServiceServer(grpcServer, &catalogServer{pool: pool})
 
 	go func() {
-		log.Fatal(grpcServer.Serve(lis))
+		log.Println("gRPC server running on :50051")
+		if err := grpcServer.Serve(lis); err != nil {
+			log.Fatal(err)
+		}
 	}()
 
-	// start out http server on port 3002 
-		log.Fatal(app.Listen(":3002"))
-
-
-
+	// start our http server on port 3002
+	log.Println("HTTP server running on :3002")
+	log.Fatal(app.Listen(":3002"))
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 	"strings"
 	"time"
@@ -9,6 +10,7 @@ import (
 	catalogpb "example.com/golang-microservice/proto"
 	"github.com/gofiber/fiber/v3"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/rabbitmq/amqp091-go"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -149,9 +151,9 @@ func main() {
 
 		// publish only after the row is saved
 
-		err = ch.PublishWithContext(context.Background(), "", "booking.created", false, false, amqp.Publishing{
+		err = ch.PublishWithContext(context.Background(), "", "booking.created", false, false, amqp091.Publishing{
 			ContentType:  "application/json",
-			DeliveryMode: amqp.Persistent,
+			DeliveryMode: amqp091.Persistent,
 			Body:         payload,
 		})
 
