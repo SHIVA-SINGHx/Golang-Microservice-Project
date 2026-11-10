@@ -45,6 +45,7 @@ func main() {
 		log.Fatal(err)
 	}
 
+	// gRPC CLIENT - Catalog se baat karne ke liye
 	conn, err := grpc.NewClient("localhost:50051", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatal(err)
@@ -53,6 +54,7 @@ func main() {
 
 	catalog := catalogpb.NewCatalogServiceClient(conn)
 
+	// FIX 1: Ab sahi RabbitMQ URL hai - homefix wala
 	amqpConn, err := amqp.Dial("amqp://homefix:homefix@localhost:5672/")
 	if err != nil {
 		log.Fatal(err)
@@ -104,6 +106,7 @@ func main() {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "service id and customer name are required or wrong data"})
 		}
 
+		// gRPC call : booking -> catalog, 2 sec ka timeout
 		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 		defer cancel()
 
@@ -118,12 +121,14 @@ func main() {
 
 		var b booking
 
+		// FIX 3: INSERT ke baad error check + TrimSpace
 		err = pool.QueryRow(context.Background(),
 			"INSERT INTO bookings (service_id, customer_name) VALUES ($1, $2) RETURNING id, service_id, customer_name, status, created_at",
 			body.ServiceID, strings.TrimSpace(body.CustomerName),
 		).Scan(&b.ID, &b.ServiceID, &b.CustomerName, &b.Status, &b.CreatedAt)
 
 		if err != nil {
+			log.Println("INSERT ERROR:", err)
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "database error"})
 		}
 
@@ -136,6 +141,7 @@ func main() {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "database error"})
 		}
 
+		// FIX 2: Ab amqp.Publishing sahi chalega
 		err = ch.PublishWithContext(context.Background(), "", "booking.created", false, false, amqp.Publishing{
 			ContentType:  "application/json",
 			DeliveryMode: amqp.Persistent,
